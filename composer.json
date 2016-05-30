@@ -16,7 +16,7 @@
         "ext-curl": "*",
         "pdedkov/config": "dev-master",
 	"pdedkov/charset": "dev-master",
-	"pdedkov/url": "dev-master",
+	"pdedkov/url": "dev-master"
     },
     "suggest": {
 	  "ext-tidy": "*"
