@@ -15,7 +15,9 @@
         "php": ">= 5.4.0",
         "ext-curl": "*",
         "pdedkov/config": "dev-master",
-	"pdedkov/charset": "dev-master"
+	"pdedkov/charset": "dev-master",
+	"pdedkov/url": "dev-master",
+	"pdedkov/logger": "dev-master"
     },
     "suggest": {
 	  "ext-tidy": "*"
