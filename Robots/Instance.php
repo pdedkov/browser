@@ -1,7 +1,7 @@
 <?php
 namespace Browser\Robots;
 
-use Uri\Instance as Uri;
+use Url\Instance as Uri;
 use Browser\Instance as Browser;
 use Config\Singleton as Base;
 

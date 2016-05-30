@@ -1,9 +1,8 @@
 <?php
 namespace Browser;
 
-use Uri\Instance as Uri;
+use Url\Instance as Uri;
 use Config\Object as Base;
-use Logger\Instance as L;
 
 class Proxy extends Base {
 	protected $_Curl = null;
@@ -123,7 +122,6 @@ class Proxy extends Base {
 			// смотря что больше текущий момент или последний запрос (он может быть в будущем, т.к. мы резервируем время
 			$next = max([$now, $last]);
 
-			L::log($now . " -> " . $domain . " => " . $next . " => " . $last . " => " . $timeout . " => " . $diff, L::LOG_INFO, 'sleep-timeout');
 			if ($diff > 0) {
 				$next += $diff;
 			}
@@ -134,11 +132,8 @@ class Proxy extends Base {
 
 			if ($diff > 0) {
 				$sleep = ($next - $now)*1000000;
-				L::log($now . " -> " . $domain . " => " . $next . " => " . $sleep . " -> wait", L::LOG_INFO, 'sleep-timeout');
 				usleep($sleep);
 			}
-			L::log($now . " -> " . $domain . " => " . microtime(true) . " -> slept", L::LOG_INFO, 'sleep-timeout');
-
 
 			return true;
 		} catch (\Exception $e) {

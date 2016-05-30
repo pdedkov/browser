@@ -17,7 +17,6 @@
         "pdedkov/config": "dev-master",
 	"pdedkov/charset": "dev-master",
 	"pdedkov/url": "dev-master",
-	"pdedkov/logger": "dev-master"
     },
     "suggest": {
 	  "ext-tidy": "*"
