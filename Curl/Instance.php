@@ -2,7 +2,7 @@
 namespace Browser\Curl;
 
 use Config\Object as Base;
-use Uri\Instance as Uri;
+use Url\Instance as Uri;
 
 class Instance extends Base {
 	protected $_curl = null;
