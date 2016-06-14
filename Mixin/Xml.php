@@ -1,9 +1,10 @@
 <?php
 namespace Browser\Mixin;
 
+use Xml as Parser;
+
 if (CAKE):
 	\App::uses('Xml', 'Utility');
-	use Xml as Parser;
 else:
 	class Parser extends \stdClass {
 		public static function toArray($xml) {
