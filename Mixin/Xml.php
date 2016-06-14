@@ -1,16 +1,17 @@
 <?php
 namespace Browser\Mixin;
 
-use Xml as Parser;
-
 if (CAKE):
 	\App::uses('Xml', 'Utility');
+	class Parser extends \Xml {
+
+	};
 else:
 	class Parser extends \stdClass {
 		public static function toArray($xml) {
 			return @json_decode(@json_encode($xml), true);
 		}
-	}
+	};
 endif;
 
 class Xml extends Base {
