@@ -33,7 +33,7 @@ class Charset extends Base {
 		}
 
 		if ($charset != $this->_config['charset']) {
-			$page = mb_convert_encoding($params['content'], $this->_config['charset'], $charset);
+			$page = @mb_convert_encoding($params['content'], $this->_config['charset'], $charset);
 		} else {
 			$page = $params['content'];
 		}
