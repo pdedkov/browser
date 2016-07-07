@@ -141,6 +141,8 @@ class Instance extends Base {
 
 	/**
 	 * magic get
+	 * @param string $name
+	 * @return mixed
 	 */
 	public function __get($name) {
 		if (isset($this->_vars[$name])) {
@@ -273,20 +275,11 @@ class Instance extends Base {
 	/**
 	 * Конфигурация браузера
 	 *
-	 * @param [] $curlOpts опции настройки curl-а
-	 * [
-	 * 	'proxy' => random|false|IP:host|remember,
-	 *  'cookie' => false|clear,
-	 * ]
-	 *
-	 * @param array $options опции настройки браузера
-	 * [
-	 *  'retry' => true, // true|false|INT
-	 *	'headers' => false, // true|false
-	 *	'exception' => true, // true|false
-	 *	'return' => 'content' // content|all|headers
-	 * ]
-	 *
+	 * @param array $curl опции настройки curl-а
+	 * @param array $config опции самого браузера
+	 * @param bool $clear очищаем предыдущие настройки
+	 * @param bool $saveConfig сохраняем конфиг перед настройкой
+	 * @return bool
 	 * @throw Browser\Exception
 	 */
 	public static function configure($curl = [], $config = [], $clear = true, $saveConfig = false) {
@@ -305,8 +298,6 @@ class Instance extends Base {
 		if (!empty($config)) {
 			$_this->_config = Hash::merge(static::$_defaults, $config);
 		}
-
-
 
 		return true;
 	}

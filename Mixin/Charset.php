@@ -133,18 +133,17 @@ class Charset extends Base {
 
 		}
 
-		$charset = $CharsetDetector->determCharset($content);
-
-		if (empty($charset) && $single) {
-			throw new Exception('Не удалось определить кодировку', Exception::WRONG_DATA);
+		//экспресс-проверка на utf-8
+		if (preg_match('#.#u', $string) > 0) {
+			if ($single) {
+				return 'utf-8';
+			} else {
+				$detected[] = 'utf-8';
+			}
 		}
 
-		$found = $CharsetDetector->normalize($charset);
-
-		if ($single) {
-			return $found;
-		} else {
-			$detected[] = $found;
+		if ($single || empty($detected)) {
+			throw new Exception('Не удалось определить кодировку', Exception::WRONG_DATA);
 		}
 
 		return $detected;

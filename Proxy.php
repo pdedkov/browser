@@ -36,6 +36,7 @@ class Proxy extends Base {
 	 * magic __call
 	 * @param вызывем метод $method
 	 * @param unknown_type $arguments
+	 * @return mixed
 	 */
 	public function __call($method, $arguments) {
 		return call_user_func_array([$this->_Curl, $method], $arguments);

@@ -49,7 +49,7 @@ class Instance extends Base {
 	/**
 	 * Основные настройки курла
 	 *
-	 * @param array $options опции curl-а
+	 * @param array $config опции curl-а
 	 * @return bool
 	 */
 	public function configure($config = []) {
