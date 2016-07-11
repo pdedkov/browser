@@ -134,7 +134,7 @@ class Charset extends Base {
 		}
 
 		//экспресс-проверка на utf-8
-		if (preg_match('#.#u', $string) > 0) {
+		if (preg_match('#.#u', $content) > 0) {
 			if ($single) {
 				return 'utf-8';
 			} else {
