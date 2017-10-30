@@ -4,6 +4,7 @@ namespace Browser\Robots;
 use Url\Instance as Uri;
 use Browser\Instance as Browser;
 use Config\Singleton as Base;
+use Browser\Exception as BrowserException;
 
 class Instance extends Base {
 	/**
@@ -115,7 +116,7 @@ class Instance extends Base {
 					$value[] = $rule;
 				}
 			}
-		} catch(\Browser\Exception $e)  {}
+		} catch(BrowserException $e)  {}
 
 		return $value;
 	}
@@ -124,15 +125,21 @@ class Instance extends Base {
 	 * Загружаем robots txt
 	 *
 	 * @param string $url домен или url для загрузки
+	 * @param string $agent UA
 	 * @return string $content содержимое robots
 	 */
 	protected function _request($url, $agent) {
-		Browser::pack();
+		try {
+			Browser::pack();
 
-		Browser::configure(['agent' => $agent], ['direct' => true, 'exception' => true]);
-		$content = Browser::get(Uri::getHost($url) . '/robots.txt');
+			Browser::configure(['agent' => $agent, 'proxy' => 'random'], ['direct' => true, 'exception' => true, 'mixin' => false]);
 
-		Browser::unpack();
+			$content = Browser::get(Uri::getHost($url) . '/robots.txt');
+			Browser::unpack();
+		} catch (\Exception $e) {
+			Browser::unpack();
+			$content = null;
+		}
 
 		return $content;
 	}

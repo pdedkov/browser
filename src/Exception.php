@@ -32,7 +32,11 @@ class Exception extends \Exception {
 	 */
 	public $messages = [];
 
-	public function __construct($message, $code = self::INTERNAL_ERROR) {
+	protected $_response = null;
+
+	public function __construct($message, $code = self::INTERNAL_ERROR, $response, Exception $previous = null) {
+		$this->_response = $response;
+
 		$this->messages = [
 			self::INVALID_MIXIN => 'Внутренняя ошибка сервиса. Обратитесь в службу поддержки',
 			self::UNATHORIZED => 'Сайт требует авторизации',
@@ -52,6 +56,10 @@ class Exception extends \Exception {
 			$message .= ' -> Ошибка доступа к сайту: ' . $code;
 		}
 
-		parent::__construct($message, $code);
+		parent::__construct($message, $code, $previous);
+	}
+
+	public function getResponse() {
+		return $this->_response;
 	}
 }

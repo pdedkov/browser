@@ -10,20 +10,28 @@
             "email": "pavel.dedkov@gmail.com"
         }
     ],
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "require": {
         "php": ">= 5.4.0",
         "ext-curl": "*",
         "pdedkov/config": "dev-master",
-	"pdedkov/charset": "dev-master",
-	"pdedkov/url": "dev-master"
+		"pdedkov/charset": "dev-master",
+		"pdedkov/url": "dev-master"
     },
+	"require-dev": {
+	  "phpunit/phpunit": "3.7.*"
+	},
     "suggest": {
 	  "ext-tidy": "*"
     },
     "autoload": {
         "psr-4": {
-            "Browser\\":""
+            "Browser\\":"src/"
         }
-    }
+    },
+	"autoload-dev": {
+	  "psr-4": {
+		"\\Tests\\Browser\\": "tests/"
+	  }
+	}
 }

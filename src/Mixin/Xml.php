@@ -27,10 +27,17 @@ class Xml extends Base {
 	 * @return array
 	 */
 	public function after(\stdClass $Object, array $params = [], array $arguments = []) {
-		$xml = simplexml_load_string($params['content']);
-		$params['content'] = Parser::toArray($xml);
+		try {
+			libxml_use_internal_errors(true);
 
-		// возвращаем обработанные данные
-		return $params;
+			$xml = simplexml_load_string($params['content']);
+			$params['content'] = Parser::toArray($xml);
+
+			// возвращаем обработанные данные
+			return $params;
+		} catch (\Exception $e) {
+			return @json_decode(@json_encode($params['content']), true);
+		}
+
 	}
 }

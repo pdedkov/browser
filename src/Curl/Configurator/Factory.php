@@ -2,17 +2,17 @@
 namespace Browser\Curl\Configurator;
 
 // @OTODO использует cake-овские сессии, нужно универсализировать
-if (CAKE):
+if (defined('CAKE')):
 	\App::uses('CakeSession', 'Model/Datasource');
 	class Session extends \CakeSession {
 
 	}
 else:
 	class Session extends \stdClass {
-		public function read($key) {
+		public static function read($key) {
 			return @$_SESSION[$key];
 		}
-		public function write($key, $value) {
+		public static function write($key, $value) {
 			$_SESSION[$key] = $value;
 		}
 	}
@@ -25,8 +25,6 @@ use Config\Hash;
  * Базовый класс конфигураторов
  */
 class Configurator extends Base {
-	protected $_Session = null;
-
 	public function __construct($config = [], $namespace = null) {
 		parent::__construct(__NAMESPACE__, $config);
 
@@ -39,8 +37,6 @@ class Configurator extends Base {
 		}
 
 		parent::__construct($namespace, $config);
-
-		$this->_Session = new Session();
 	}
 }
 
@@ -67,7 +63,7 @@ class Proxy extends Configurator implements Iface {
 		}
 
 		// берём проскю из сессии
-		$proxy = $this->_Session->read('Browser.proxy');
+		$proxy = Session::read('Browser.proxy');
 
 		$remember = false;
 		foreach ($options as $option) {
@@ -75,7 +71,6 @@ class Proxy extends Configurator implements Iface {
 				case 'random':
 					$proxies = $this->_config['proxy'];
 					if (empty($proxies)) {
-						trigger_error('Список проксей пуст', E_USER_WARNING);
 						$proxy = null;
 					} else {
 						$proxy = $proxies[array_rand($proxies)];
@@ -97,11 +92,14 @@ class Proxy extends Configurator implements Iface {
 			}
 		}
 
-		if ($remember) {
-			$this->_Session->write('Browser.proxy', $proxy);
+		if ($proxy) {
+			if ($remember) {
+				Session::write('Browser.proxy', $proxy);
+			}
+
+			curl_setopt($handler, CURLOPT_PROXY, $proxy);
 		}
 
-		curl_setopt($handler, CURLOPT_PROXY, $proxy);
 
 		return $handler;
 	}
@@ -131,7 +129,7 @@ class Agent extends Configurator implements Iface {
 		$options = array_map('trim', explode("|", $options));
 
 		// берём проскю из сессии
-		$agent = $this->_Session->read('Browser.agent');
+		$agent = Session::read('Browser.agent');
 
 		$remember = false;
 		foreach ($options as $option) {
@@ -157,7 +155,7 @@ class Agent extends Configurator implements Iface {
 		}
 
 		if ($remember) {
-			$this->_Session->write('Browser.agent', $agent);
+			Session::write('Browser.agent', $agent);
 		}
 
 		curl_setopt($handler, CURLOPT_USERAGENT, $agent);
@@ -192,7 +190,7 @@ class Ip extends Configurator implements Iface {
 		$options = explode("|", $options);
 
 		// берём проскю из сессии
-		$ip = $this->_Session->read('Browser.ip');
+		$ip = Session::read('Browser.ip');
 
 		$remember = false;
 		foreach ($options as $option) {
@@ -218,7 +216,7 @@ class Ip extends Configurator implements Iface {
 		}
 
 		if ($remember) {
-			$this->_Session->write('Browser.ip', $ip);
+			Session::write('Browser.ip', $ip);
 		}
 
 		// Устанавливаем его в Curl
@@ -243,14 +241,14 @@ class Cookie extends Configurator implements Iface {
 		$options = explode("|", $options);
 
 		// берём проскю из сессии
-		$cookie = $this->_Session->read('Browser.cookie');
+		$cookie = Session::read('Browser.cookie');
 
 		$remember = false;
 		foreach ($options as $option) {
 			switch ($option) {
 				case 'random':
 					if (empty($cookie) || !file_exists($cookie)) {
-						$cookie = tempnam(TMP, 'cookie_');
+						$cookie = tempnam(TMP . 'cookie' . DS, 'cookie_');
 					}
 					break;
 				case 'remember':
@@ -267,7 +265,7 @@ class Cookie extends Configurator implements Iface {
 		}
 
 		if ($remember) {
-			$this->_Session->write('Browser.cookie', $cookie);
+			Session::write('Browser.cookie', $cookie);
 		}
 		
 		if (!empty($cookie)) {

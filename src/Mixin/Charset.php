@@ -38,8 +38,8 @@ class Charset extends Base {
 			$page = $params['content'];
 		}
 
-		// определилил как utf, но это нифига не оно
-		if (preg_match('/Р.Р.Р.Р/u', $page) > $this->_config['countUtf']) {
+		// определили как windows-1251, но это был utf
+		if (preg_match_all('/Р.Р.Р.Р/u', $page) > $this->_config['countUtf']) {
 			$page = $params['content'];
 		}
 
@@ -62,6 +62,7 @@ class Charset extends Base {
 	 * @param string $content содержимое
 	 * @param string $headers полученные заголовки
 	 * @param bool $single все найденные значения
+	 * @throws Exception
 	 * @return string
 	 */
 	protected function _detectCharset($content, $headers, $single = true) {
@@ -74,19 +75,26 @@ class Charset extends Base {
 
 		$charset = null;
 
-		$regexp = "/<meta.+?charset\s*=\s*([\w\s\d-]*)[\"|']/is";
+		// вырезаем комменты
+		$content = preg_replace("#<!--.*?-->#mis", "", $content);
+
+		$regexp = "/<meta.+?charset\s*=\s*([\w\s\d-]*)[\"|']/iUs";
 		preg_match($regexp, $content, $matches);
 		if (isset($matches[1]) && strlen($matches[1])) {
 			$found = $CharsetDetector->normalize($matches[1]);
-			if ($single) {
-				return $found;
-			} else {
-				$detected[] = $found;
+			if (!empty($found)) {
+				if ($single) {
+					return $found;
+				} else {
+					$detected[] = $found;
+				}
 			}
 		}
 
+
+
 		if (empty($detected)) {
-			$regexp = "/charset.+?=([\w\s\d-]+?)[\"|']/is";
+			$regexp = "/charset.?=([\w\s\d-]+?)[\"|']/is";
 			preg_match($regexp, $content, $matches);
 			if (!empty($matches[1])) {
 				$matches[1] = trim($matches[1]);
@@ -104,33 +112,40 @@ class Charset extends Base {
 			}
 		}
 
+
+
 		if (!empty($headers) && is_array($headers)) {
 		    foreach ($headers as $name => $header) {
 		    	if ($name == 'content_type') {
 		        	preg_match('/([\w\+]+);\s+charset=([\w\s\d-]*)/is', $header, $matches);
 		        	if (isset($matches[2])) {
 						$found = $CharsetDetector->normalize(strtolower($matches[2]));
-		          		if ($single) {
-							return $found;
-						} else {
-							$detected[] = $found;
+						if (!empty($found)) {
+							if ($single) {
+								return $found;
+							} else {
+								$detected[] = $found;
+							}
 						}
 		        	}
 		      	}
 		    }
 	    }
 
+
+
 		// есть уникумы, которые ввообще не в курсе, как оформляются теги
 		$regexp = "/<meta.+?charset\s*=\s*([\w\s\d-]*)/is";
 		preg_match($regexp, $content, $matches);
 		if (isset($matches[1]) && strlen($matches[1])) {
 			$found = $CharsetDetector->normalize($matches[1]);
-			if ($single) {
-				return $found;
-			} else {
-				$detected[] = $found;
+			if (!empty($found)) {
+				if ($single) {
+					return $found;
+				} else {
+					$detected[] = $found;
+				}
 			}
-
 		}
 
 		//экспресс-проверка на utf-8

@@ -17,9 +17,10 @@ class Proxy extends Base {
 	protected static $_defaults = [
 		'agent'	=> 'Browser',
 		'Db'	=> [
-			'driver' => 'Redis',
+			'driver' => 'Dummy',
 			'config' => []
-		]
+		],
+		'maxDelay' => 2
 	];
 
 	public function __construct($config = []) {
@@ -62,10 +63,17 @@ class Proxy extends Base {
 				$response = $this->_Db->readCache($url);
 			}
 
+
+			$wait = $cached = false;
+			$start = $end = 0;
+
 			// если ответ не закешировался
 			if (empty($response['content'])) {
 				if (!$direct) {
+					$wait = true;
+					$start = microtime(true);
 					$this->_timeout($url);
+					$end = microtime(true) - $start;
 				}
 
 				$response = $this->_Curl->request($url, $type, $data);
@@ -74,6 +82,8 @@ class Proxy extends Base {
 				if (empty($response['error']) && $cache) {
 					$this->_Db->writeCache($url, $response);
 				}
+			} else {
+				$cached = true;
 			}
 
 			return $response;
@@ -97,34 +107,42 @@ class Proxy extends Base {
 		}
 
 		try {
-			if (!is_float($timeout)) {
+			if (!is_numeric($timeout)) {
 				$timeouts = Robots\Instance::get($url, 'crawl-delay', $this->_config['agent']);
-				$timeout = (is_array($timeouts) && isset($timeouts[0]['value'])) ? floatval($timeouts[0]['value']) : 0.00;
-				// ставим timeout
-				try {
-					$timeout = $this->_Db->timeout($domain, $timeout);
-				} catch (\Exception $e) {
-				}
-			}
+				if (!empty($timeouts[0]) && array_key_exists('value', $timeouts[0])) {
+					$timeout = (int)trim($timeouts[0]['value']);
+					// ставим timeout
+					try {
+						if ($timeout > $this->_config['maxDelay']) {
+							$timeout = $this->_config['maxDelay'];
+						}
 
+						$timeout = $this->_Db->timeout($domain, $timeout);
+					} catch (\Exception $e) {
+					}
+				}
+
+			}
+			if ($timeout <= 0) {
+				return true;
+			}
 			// получаем время последнего запроса
 			try {
 				$last = $this->_Db->request($domain);
 			} catch (\Exception $e) {
 				// если ошибка, то делаем вид, что только что сделали запрос
-				$last = microtime(true);
+				$last = time();
 			}
 
-			$now = microtime(true);
-			// переводим в микросекунды
-			$diff = $last - $now + $timeout;
 
+			$now = time();
+			$diff = $last - $now + $timeout;
 
 			// смотря что больше текущий момент или последний запрос (он может быть в будущем, т.к. мы резервируем время
 			$next = max([$now, $last]);
 
 			if ($diff > 0) {
-				$next += $diff;
+				$next += $timeout;
 			}
 
 			// небольшой хак, для того, что другие клиенты считали этот запрос выполенным, иначе может получить пачка
@@ -132,8 +150,8 @@ class Proxy extends Base {
 			$this->_Db->request($domain, $next);
 
 			if ($diff > 0) {
-				$sleep = ($next - $now)*1000000;
-				usleep($sleep);
+				$sleep = $next - $now;
+				sleep((int)$sleep);
 			}
 
 			return true;

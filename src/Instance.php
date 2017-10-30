@@ -47,7 +47,9 @@ class Instance extends Base {
 		'return'	=> 'content',
 		'cache'		=> false,
 		'direct'	=> true,
-		'sleep'	=> 2
+		'sleep'	=> 2,
+		'mixin' => true,
+		'debug' => false
 	];
 
 	/**
@@ -60,7 +62,6 @@ class Instance extends Base {
 		parent::__construct($namespace);
 		// перечитываем дефолтные опции конфиругации
 		$this->_Proxy = new Proxy();
-
 		$this->_Proxy->configure();
 	}
 
@@ -90,8 +91,10 @@ class Instance extends Base {
 			throw new Exception("Метод {$name} не определён");
 		}
 
-		// миксируем то, что перед
-		$mixedArguments = $_this->_mix('before', $arguments, $name);
+		$mixedArguments = ($_this->_config['mixin'])
+			? $_this->_mix('before', $arguments, $name)
+			: $arguments
+		;
 
 		// расчитываем количество попыток
 		$count = !empty($_this->_config['retry'])
@@ -116,18 +119,26 @@ class Instance extends Base {
 			} else {
 				// ругаимся
 				if ($_this->_config['exception']) {
-					throw new Exception($result['error'], $result['headers']['http_code']);
+					throw new Exception(
+						$result['error'], $result['headers']['http_code'],
+						$_this->_config['debug'] ? $result['content'] : null
+					);
 				}
 			}
 		} while ($count > 0);
 
-		// миксируем то, что после действия
-		$result = $_this->_mix('after', $result, $arguments);
+
+
+		if ($_this->_config['mixin']) {
+			// миксируем то, что после действия
+			$result = $_this->_mix('after', $result, $arguments);
+		}
+
 
 		// определяем что именно нужно вернуть
 		switch ($_this->_config['return']) {
 			case 'content':
-				return $result['content'];
+				return !empty($result['content']) ? $result['content'] : "";
 				break;
 			case 'headers':
 				return $result['headers'];
@@ -251,7 +262,6 @@ class Instance extends Base {
 	 * @param mixed $data данные для примеси
 	 */
 	protected function _mix($action, $data, $arguments = null) {
-		$result = $data;
 		// сортируем приоритеты миксов
 		if (!empty($this->_mixins) && !empty($this->_mixPriorities)) {
 			asort($this->_mixPriorities);
@@ -264,7 +274,11 @@ class Instance extends Base {
 						$name = "Browser\Mixin\\{$name}";
 						$Mixin = new $name();
 					}
-					$data = $Mixin->{$action}($this, $data, $arguments);
+					try {
+						$data = $Mixin->{$action}($this, $data, $arguments);
+					} catch (\Exception $e) {
+					}
+
 				}
 			}
 		}
@@ -288,11 +302,13 @@ class Instance extends Base {
 		// очищаем
 		if ($clear) {
 			$_this->_Proxy->clear($saveConfig);
+			$_this->_config(__NAMESPACE__, $config);
 		}
 
 		if (!empty($curl)) {
 			$_this->_Proxy->configure($curl);
 		}
+		$_this->_config['mixin'] = true;
 
 		// конфигурируем себя
 		if (!empty($config)) {

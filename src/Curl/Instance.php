@@ -241,7 +241,7 @@ class Instance extends Base {
 
 		$headers = curl_getinfo($this->_curl);
 
-		if ($headers['http_code'] != 200) {
+		if ($headers['http_code'] < 200 || $headers['http_code'] >= 300) {
 			if ($headers['http_code'] > 0) {
 				$response['error'] =  $this->_url . ' Неверный код ответа: ' . $headers['http_code'];
 			} else {
